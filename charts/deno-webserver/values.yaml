@@ -16,7 +16,7 @@ fullnameOverride: ""
 
 volumes:
   - name: data
-    size: 3Gi
+    size: 4Gi
     path: /data/deno-server/
     persistentVolumeReclaimPolicy: Retain
 
