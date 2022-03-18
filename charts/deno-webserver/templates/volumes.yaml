@@ -1,5 +1,6 @@
 {{- if .Values.volumes }}
 {{- range $volume := .Values.volumes }}
+---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -16,16 +17,18 @@ spec:
 
 {{- end }}
 {{- end }}
----
+
 {{- if .Values.volumeClaims }}
 {{- range $volumeClaim := .Values.volumeClaims }}
-
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
     name: {{ $volumeClaim.name }}
     namespace: {{ $volumeClaim.namespace | default "default" }}
 spec:
+    storageClassName: {{ $volumeClaim.storageClassName | default "standard" }}
+    volumeName: {{ $volumeClaim.volumeName }}
     accessModes:
         - ReadWriteOnce
     resources:

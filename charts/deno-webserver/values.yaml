@@ -2,8 +2,6 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 1
-
 image:
   repository: codebuds/deno-webserver
   pullPolicy: IfNotPresent
@@ -15,21 +13,40 @@ nameOverride: ""
 fullnameOverride: ""
 
 volumes:
-  - name: data
+  - name: webserver-logs
     size: 4Gi
     path: /data/deno-server/
     persistentVolumeReclaimPolicy: Retain
 
+  - name: mariadb-data
+    size: 1Gi
+    path: /data/mariadb-data/
+    persistentVolumeReclaimPolicy: Retain
+
 volumeClaims:
-  - name: data
+  - name: webserver-logs
     size: 1Gi
     path: /data/deno-server/
     persistentVolumeReclaimPolicy: Retain
+    volumeName: webserver-logs
 
-volumeMounts:
-  - container: deno-webserver
-    name: data
-    mountPath: /srv/app/pvc
+  - name: mariadb-data
+    size: 1Gi
+    path: /data/mariadb-data/
+    persistentVolumeReclaimPolicy: Retain
+    volumeName: mariadb-data
+
+webserver:
+  replicaCount: 3
+
+  volumeMounts:
+    - name: webserver-logs
+      mountPath: /srv/app/pvc
+
+  volumes:
+    - name: webserver-logs
+      claimName: webserver-logs
+
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -97,3 +114,38 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+
+
+mariadb:
+  rootPassword: asecret
+  user: auser
+  password: usersecret
+  database: logs
+
+  volumeMounts:
+    - name: mariadb-data
+      mountPath: /var/lib/mysql
+
+  volumes:
+    - name: mariadb-data
+      claimName: mariadb-data
+
+  resources: {}
+
+  securityContext: {}
+
+  nodeSelector: { }
+
+  tolerations: [ ]
+
+  affinity: { }
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+
+  image:
+    repository: mariadb
+    pullPolicy: IfNotPresent
+    tag: 10.7
