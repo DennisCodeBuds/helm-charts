@@ -5,6 +5,10 @@
   http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}{{ .path }}
   {{- end }}
 {{- end }}
+If running this locally on minikube you need to add the minikube ip and the hosts to /etc/hosts
+{{- range $host := .Values.ingress.hosts }}
+ echo "$(minikube ip) http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}" | sudo tee -a /etc/hosts
+{{- end }}
 {{- else if contains "NodePort" .Values.service.type }}
   export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "deno-webserver.fullname" . }})
   export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
@@ -12,7 +16,7 @@
 {{- else if contains "LoadBalancer" .Values.service.type }}
      NOTE: It may take a few minutes for the LoadBalancer IP to be available.
            You can watch the status of by running 'kubectl get --namespace {{ .Release.Namespace }} svc -w {{ include "deno-webserver.fullname" . }}'
-  export SERVICE_IP=$(kubectl get svc --namespace default deno-webserver | awk 'FNR==2{print $4}')
+  export SERVICE_IP=$(kubectl get svc --namespace default {{ include "deno-webserver.fullname" . }} | awk 'FNR==2{print $4}')
   echo http://$SERVICE_IP:{{ .Values.service.port }}
 {{- else if contains "ClusterIP" .Values.service.type }}
   export POD_NAME=$(kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "deno-webserver.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -o jsonpath="{.items[0].metadata.name}")

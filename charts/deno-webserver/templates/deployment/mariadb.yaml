@@ -1,26 +1,30 @@
+{{- $releaseName := .Release.Name }}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mariadb
+  name: {{ $releaseName }}-mariadb
   labels:
-    app: mariadb
-    tier: database
+    app: {{ $releaseName }}-mariadb
+    tier: {{ $releaseName }}-database
 spec:
   selector:
     matchLabels:
-      app: mariadb
-      tier: database
+      app: {{ $releaseName }}-mariadb
+      tier: {{ $releaseName }}-database
+  strategy:
+    type:  {{ .Values.mariadb.strategy }}
   template:
     metadata:
       labels:
-        app: mariadb
-        tier: database
+        app: {{ $releaseName }}-mariadb
+        tier: {{ $releaseName }}-database
     spec:
       serviceAccountName: {{ include "deno-webserver.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.mariadb.podSecurityContext | nindent 8 }}
       containers:
-        - name: mariadb
+        - name: {{ $releaseName }}-mariadb
           securityContext:
             {{- toYaml .Values.mariadb.securityContext | nindent 12 }}
           image: "{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag | default 10.7 }}"
@@ -29,14 +33,14 @@ spec:
             - name: mysql
               containerPort: 3306
           livenessProbe:
-            initialDelaySeconds: 60
+            initialDelaySeconds: 30
             exec:
               command:
                 - ./bin/sh
                 - -c
                 - "exec mysqladmin status -uroot -p$MARIADB_ROOT_PASSWORD"
           readinessProbe:
-            initialDelaySeconds: 30
+            initialDelaySeconds: 15
             exec:
                command:
                  - ./bin/sh
@@ -49,34 +53,34 @@ spec:
             - name: MARIADB_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mariadb-secret
+                  name: {{ $releaseName }}-mariadb-secret
                   key: rootPassword
             {{- end }}
             {{- if .Values.mariadb.database }}
             - name: MARIADB_DATABASE
               valueFrom:
                 secretKeyRef:
-                  name: mariadb-secret
+                  name: {{ $releaseName }}-mariadb-secret
                   key: database
             {{- end }}
             {{- if .Values.mariadb.user }}
             - name: MARIADB_USER
               valueFrom:
                 secretKeyRef:
-                  name: mariadb-secret
+                  name: {{ $releaseName }}-mariadb-secret
                   key: user
             {{- end }}
             {{- if .Values.mariadb.password }}
             - name: MARIADB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mariadb-secret
+                  name: {{ $releaseName }}-mariadb-secret
                   key: password
             {{- end }}
           {{- if .Values.mariadb.volumeMounts }}
           volumeMounts:
           {{- range $volume := .Values.mariadb.volumeMounts }}
-              -   name: {{ $volume.name }}
+              -   name: {{ $releaseName }}-{{ $volume.name }}
                   mountPath: {{ $volume.mountPath }}
           {{- end }}
           {{- end }}
@@ -95,9 +99,9 @@ spec:
       {{- if .Values.mariadb.volumes }}
       volumes:
       {{- range $volume := .Values.mariadb.volumes }}
-          -   name: {{ $volume.name }}
+          -   name: {{ $releaseName }}-{{ $volume.name }}
               persistentVolumeClaim:
-                  claimName: {{ $volume.claimName }}
+                  claimName: {{ $releaseName }}-{{ $volume.claimName }}
       {{- end }}
       {{- end }}
 
@@ -106,9 +110,9 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: maria-db
+  name: {{ $releaseName }}-maria-db
 spec:
   ports:
     - port: 3306
   selector:
-    app: mariadb
+    app: {{ $releaseName }}-mariadb

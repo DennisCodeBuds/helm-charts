@@ -1,19 +1,21 @@
+{{- $releaseName := .Release.Name }}
+
 {{- if .Values.volumes }}
 {{- range $volume := .Values.volumes }}
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-    name: {{ $volume.name }}
+  name: {{ $releaseName }}-{{ $volume.name }}
 spec:
-    accessModes:
-        - ReadWriteOnce
-    persistentVolumeReclaimPolicy: {{ $volume.persistentVolumeReclaimPolicy | default "retain" }}
-    storageClassName: {{ $volume.storageClassName | default "standard" }}
-    capacity:
-        storage: {{ $volume.size }}
-    hostPath:
-        path: {{ $volume.path }}
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: {{ $volume.persistentVolumeReclaimPolicy | default "retain" }}
+  storageClassName: {{ $volume.storageClassName | default "standard" }}
+  capacity:
+    storage: {{ $volume.size }}
+  hostPath:
+    path: /{{ $releaseName }}{{ $volume.path }}
 
 {{- end }}
 {{- end }}
@@ -24,16 +26,16 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-    name: {{ $volumeClaim.name }}
-    namespace: {{ $volumeClaim.namespace | default "default" }}
+  name: {{ $releaseName }}-{{ $volumeClaim.name }}
+  namespace: {{ $volumeClaim.namespace | default "default" }}
 spec:
-    storageClassName: {{ $volumeClaim.storageClassName | default "standard" }}
-    volumeName: {{ $volumeClaim.volumeName }}
-    accessModes:
-        - ReadWriteOnce
-    resources:
-        requests:
-            storage: {{ $volumeClaim.size }}
+  storageClassName: {{ $volumeClaim.storageClassName | default "standard" }}
+  volumeName: {{ $releaseName }}-{{ $volumeClaim.volumeName }}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ $volumeClaim.size }}
 
 {{- end }}
 {{- end }}

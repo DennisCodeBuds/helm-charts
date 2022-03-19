@@ -1,3 +1,5 @@
+{{- $releaseName := .Release.Name }}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,8 +32,11 @@ spec:
 
       initContainers:
         - name: {{ .Chart.Name }}-init
+          env:
+            - name: MARIADB_HOST
+              value: {{ $releaseName }}-maria-db
           image: busybox:1.31
-          command: [ 'sh', '-c', 'echo -e "Checking for the availability of MariaDB Server deployment"; while ! nc -z maria-db 3306; do sleep 1; printf "-"; done; echo -e "  >> MariaDB Server has started";' ]
+          command: [ 'sh', '-c', "echo -e \"Checking for the availability of MariaDB Server deployment\"; while ! nc -z $MARIADB_HOST 3306; do sleep 1; printf \"-\"; done; echo -e \"  >> MariaDB Server has started\";" ]
 
       containers:
         - name: {{ .Chart.Name }}
@@ -47,27 +52,58 @@ spec:
             httpGet:
               path: /probe?probeType=startup
               port: http
-            failureThreshold: 30
+            failureThreshold: 10
             periodSeconds: 10
           livenessProbe:
-            initialDelaySeconds: 60
-            periodSeconds: 30
+            initialDelaySeconds: 30
+            periodSeconds: 15
             httpGet:
               path: /probe?probeType=liveness
               port: http
           readinessProbe:
-            initialDelaySeconds: 30
-            periodSeconds: 600
+            initialDelaySeconds: 20
+            periodSeconds: 60
             httpGet:
               path: /probe?probeType=readiness
               port: http
+          env:
+            - name: MARIADB_HOST
+              value: {{ $releaseName }}-maria-db
+            {{- if .Values.mariadb.rootPassword }}
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $releaseName }}-mariadb-secret
+                  key: rootPassword
+            {{- end }}
+            {{- if .Values.mariadb.database }}
+            - name: MARIADB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $releaseName }}-mariadb-secret
+                  key: database
+            {{- end }}
+            {{- if .Values.mariadb.user }}
+            - name: MARIADB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $releaseName }}-mariadb-secret
+                  key: user
+            {{- end }}
+            {{- if .Values.mariadb.password }}
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $releaseName }}-mariadb-secret
+                  key: password
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- if .Values.webserver.volumeMounts }}
           volumeMounts:
           {{- range $volume := .Values.webserver.volumeMounts }}
-              -   name: {{ $volume.name }}
-                  mountPath: {{ $volume.mountPath }}
+            - name: {{ $releaseName }}-{{ $volume.name }}
+              mountPath: {{ $volume.mountPath }}
           {{- end }}
           {{- end }}
       {{- with .Values.nodeSelector }}
@@ -85,8 +121,8 @@ spec:
       {{- if .Values.volumes }}
       volumes:
       {{- range $volume := .Values.webserver.volumes }}
-          -   name: {{ $volume.name }}
-              persistentVolumeClaim:
-                  claimName: {{ $volume.claimName }}
+        - name: {{ $releaseName }}-{{ $volume.name }}
+          persistentVolumeClaim:
+            claimName: {{ $releaseName }}-{{ $volume.claimName }}
       {{- end }}
       {{- end }}
