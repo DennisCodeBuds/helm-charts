@@ -18,3 +18,19 @@ To install the deno-webserver chart:
 To uninstall the chart:
 
     helm delete my-deno-webserver
+
+## Charts
+
+### sf-log-server
+
+- 0.1.0 : A symfony 6 server and a MariaDB server.
+    - Keep track of all visits
+    - Add a PVC 
+    - Use InitContainers to check Database state and set PVC rights on mountPaths
+
+### deno-webserver
+
+- 0.3.1 : Remove unused values
+- 0.3.0 : Add mariaDB deployement
+- 0.2.0 : Add volumes
+- 0.1.0 : Init deno webserver keeping logs
