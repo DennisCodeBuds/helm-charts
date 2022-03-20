@@ -1,9 +1,5 @@
-# Default values for deno-webserver.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
 image:
-  repository: codebuds/deno-webserver
+  repository: codebuds/micro-symfony-webserver
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
@@ -35,9 +31,17 @@ volumeClaims:
 webserver:
   replicaCount: 3
 
+  securityContext:
+    runAsUser: 82
+    runAsGroup: 82
+
+  podSecurityContext:
+    fsGroup: 82
+
+
   volumeMounts:
     - name: webserver-logs
-      mountPath: /srv/app/pvc
+      mountPath: /srv/app/shared-logs
 
   volumes:
     - name: webserver-logs
@@ -55,29 +59,18 @@ serviceAccount:
 
 podAnnotations: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
-
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-
 service:
   type: NodePort
-  port: 8080
+  port: 8000
 
 ingress:
   enabled: true
   className: ""
   annotations: {}
     # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
+  # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: deno.minikube
+    - host: sf.minikube
       paths:
         - path: /
           pathType: ImplementationSpecific
@@ -96,7 +89,7 @@ resources: {}
   #   memory: 128Mi
   # requests:
   #   cpu: 100m
-  #   memory: 128Mi
+#   memory: 128Mi
 
 autoscaling:
   enabled: false
@@ -110,8 +103,6 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
-
-
 
 mariadb:
   rootPassword: asecret

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "sf-log-server.fullname" . }}-test-connection"
+  labels:
+    {{- include "sf-log-server.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['{{ include "sf-log-server.fullname" . }}:{{ .Values.service.port }}']
+  restartPolicy: Never

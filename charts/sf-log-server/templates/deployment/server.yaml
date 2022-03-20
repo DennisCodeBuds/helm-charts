@@ -1,0 +1,133 @@
+{{- $releaseName := .Release.Name }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sf-log-server.fullname" . }}
+  labels:
+    {{- include "sf-log-server.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.webserver.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "sf-log-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "sf-log-server.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "sf-log-server.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.webserver.podSecurityContext | nindent 8 }}
+      initContainers:
+      {{- if .Values.webserver.volumeMounts }}
+        - name: {{ .Chart.Name }}-init-volumes
+          image: busybox:1.31
+          command: [
+            'sh',
+            '-c',
+            {{- range $volume := .Values.webserver.volumeMounts }}
+            'chown -R {{ $.Values.webserver.securityContext.runAsUser}}:{{ $.Values.webserver.securityContext.runAsGroup}} {{ $volume.mountPath }}',
+            {{- end }}
+          ]
+          volumeMounts:
+          {{- range $volume := .Values.webserver.volumeMounts }}
+            - name: {{ $releaseName }}-{{ $volume.name }}
+              mountPath: {{ $volume.mountPath }}
+          {{- end }}
+      {{- end }}
+        - name: {{ .Chart.Name }}-check-database
+          env:
+            - name: MARIADB_HOST
+              value: {{ $releaseName }}-maria-db
+          image: busybox:1.31
+          command: [
+            'sh',
+            '-c',
+            "echo -e \"Checking for the availability of MariaDB Server deployment\"; while ! nc -z $MARIADB_HOST 3306; do sleep 1; printf \"-\"; done; echo -e \"  >> MariaDB Server has started\";"
+          ]
+
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.webserver.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /probe?probeType=startup
+              port: http
+            failureThreshold: 10
+            periodSeconds: 10
+          livenessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            httpGet:
+              path: /probe?probeType=liveness
+              port: http
+          readinessProbe:
+            initialDelaySeconds: 20
+            periodSeconds: 60
+            httpGet:
+              path: /probe?probeType=readiness
+              port: http
+          env:
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $releaseName }}-mariadb-secret
+                  key: password
+            - name: MARIADB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $releaseName }}-mariadb-secret
+                  key: user
+            - name: MARIADB_HOST
+              value: {{ $releaseName }}-maria-db
+            - name: DATABASE_URL
+              value: mysql://$(MARIADB_USERNAME):$(MARIADB_PASSWORD)@$(MARIADB_HOST)/{{.Values.mariadb.database}}?serverVersion={{.Values.mariadb.image.tag}}"
+
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.webserver.volumeMounts }}
+          volumeMounts:
+          {{- range $volume := .Values.webserver.volumeMounts }}
+            - name: {{ $releaseName }}-{{ $volume.name }}
+              mountPath: {{ $volume.mountPath }}
+          {{- end }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.volumes }}
+      volumes:
+      {{- range $volume := .Values.webserver.volumes }}
+        - name: {{ $releaseName }}-{{ $volume.name }}
+          persistentVolumeClaim:
+            claimName: {{ $releaseName }}-{{ $volume.claimName }}
+      {{- end }}
+      {{- end }}
+
