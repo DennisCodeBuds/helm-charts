@@ -3,6 +3,16 @@ entries:
   deno-webserver:
   - apiVersion: v2
     appVersion: 1.5.0
+    created: "2022-03-20T16:18:49.43155569Z"
+    description: A Helm chart for Kubernetes Deno-Webserver
+    digest: fde63e9a66ac9237412e3745a576cda578444a6bd1062764b6b208368f0070bc
+    name: deno-webserver
+    type: application
+    urls:
+    - https://github.com/DennisCodeBuds/helm-charts/releases/download/deno-webserver-0.3.1/deno-webserver-0.3.1.tgz
+    version: 0.3.1
+  - apiVersion: v2
+    appVersion: 1.5.0
     created: "2022-03-19T13:28:55.078997382Z"
     description: A Helm chart for Kubernetes Deno-Webserver
     digest: ce87df7222ae025742b41875fcd2932bc6df3d9b89c4ce9e5ccae23db9fa9fa3
@@ -31,4 +41,15 @@ entries:
     urls:
     - https://github.com/DennisCodeBuds/helm-charts/releases/download/deno-webserver-0.1.1/deno-webserver-0.1.1.tgz
     version: 0.1.1
-generated: "2022-03-19T13:28:55.079007782Z"
+  sf-log-server:
+  - apiVersion: v2
+    appVersion: 0.1.0
+    created: "2022-03-20T16:18:49.590874976Z"
+    description: A Helm chart to test how logs are kept
+    digest: df9dc783d285ae764e9b3b51f6494119d2fc19965ad17326c3018f49be906e2b
+    name: sf-log-server
+    type: application
+    urls:
+    - https://github.com/DennisCodeBuds/helm-charts/releases/download/sf-log-server-0.1.0/sf-log-server-0.1.0.tgz
+    version: 0.1.0
+generated: "2022-03-20T16:18:49.590892976Z"
