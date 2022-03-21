@@ -1,13 +1,15 @@
 1. Get the application URL by running these commands:
 {{- if .Values.ingress.enabled }}
 {{- range $host := .Values.ingress.hosts }}
+  {{$data := dict "host" . "Release" $.Release }}
   {{- range .paths }}
-  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}{{ .path }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ include "host-url" $data }}{{ .path }}
   {{- end }}
 {{- end }}
 If running this locally on minikube you need to add the minikube ip and the hosts to /etc/hosts
 {{- range $host := .Values.ingress.hosts }}
- echo "$(minikube ip) {{ $host.host }}" | sudo tee -a /etc/hosts
+{{$data := dict "host" . "Release" $.Release }}
+ echo "$(minikube ip) {{ include "host-url" $data }}" | sudo tee -a /etc/hosts
 {{- end }}
 {{- else if contains "NodePort" .Values.service.type }}
   export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "sf-log-server.fullname" . }})

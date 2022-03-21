@@ -60,3 +60,18 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Generate dynamic host base on the Release name if the TLD is set
+In a range of hosts set a Data dictionary to get the right values
+{{$data := dict "host" . "Release" $.Release }} ant then include this with the data
+{{ include "host-url" $data }}
+*/}}
+{{- define "host-url"}}
+{{- if .host.tld }}
+{{- print .Release.Name "." .host.tld }}
+{{- else }}
+{{- print .host.host }}
+{{- end }}
+{{- end }}
+

@@ -29,7 +29,8 @@ spec:
   {{- end }}
   rules:
     {{- range .Values.ingress.hosts }}
-    - host: {{ .host | quote }}
+    {{$data := dict "host" . "Release" $.Release }}
+    - host: {{ include "host-url" $data }}
       http:
         paths:
           {{- range .paths }}

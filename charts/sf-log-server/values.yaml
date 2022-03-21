@@ -70,7 +70,8 @@ ingress:
     # kubernetes.io/ingress.class: nginx
   # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: sf.minikube
+    - host: {}
+      tld: minikube # If the TLD value is set the host will be ".Release.Name . tld"
       paths:
         - path: /
           pathType: ImplementationSpecific
