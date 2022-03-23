@@ -9,7 +9,7 @@
 If running this locally on minikube you need to add the minikube ip and the hosts to /etc/hosts
 {{- range $host := .Values.ingress.hosts }}
 {{$data := dict "host" . "Release" $.Release }}
- echo "$(minikube ip) {{ include "host-url" $data }}" | sudo tee -a /etc/hosts
+    sed -i.bak -e '$a\' -e "$(minikube ip)\t\t{{ include "host-url" $data }}" -e "/.*{{ include "host-url" $data }}/d" /etc/hosts
 {{- end }}
 {{- else if contains "NodePort" .Values.service.type }}
   export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "sf-log-server.fullname" . }})

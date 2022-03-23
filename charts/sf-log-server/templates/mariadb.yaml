@@ -1,19 +1,18 @@
 {{- $releaseName := .Release.Name }}
 
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ $releaseName }}-mariadb
   labels:
     app: {{ $releaseName }}-mariadb
     tier: {{ $releaseName }}-database
 spec:
+  serviceName: {{ $releaseName }}-mariadb
   selector:
     matchLabels:
       app: {{ $releaseName }}-mariadb
       tier: {{ $releaseName }}-database
-  strategy:
-    type:  {{ .Values.mariadb.strategy }}
   template:
     metadata:
       labels:
@@ -42,46 +41,19 @@ spec:
           readinessProbe:
             initialDelaySeconds: 15
             exec:
-               command:
-                 - ./bin/sh
-                 - -c
-                 - "exec mysqladmin status -uroot -p$MARIADB_ROOT_PASSWORD"
+              command:
+                - ./bin/sh
+                - -c
+                - "exec mysqladmin status -uroot -p$MARIADB_ROOT_PASSWORD"
           resources:
             {{- toYaml .Values.mariadb.resources | nindent 12 }}
           env:
-            {{- if .Values.mariadb.database }}
-            - name: MARIADB_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $releaseName }}-mariadb-secret
-                  key: rootPassword
-            {{- end }}
-            {{- if .Values.mariadb.database }}
-            - name: MARIADB_DATABASE
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $releaseName }}-mariadb-secret
-                  key: database
-            {{- end }}
-            {{- if .Values.mariadb.user }}
-            - name: MARIADB_USER
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $releaseName }}-mariadb-secret
-                  key: user
-            {{- end }}
-            {{- if .Values.mariadb.password }}
-            - name: MARIADB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $releaseName }}-mariadb-secret
-                  key: password
-            {{- end }}
+          {{- include "maria-env" . | nindent 12 -}}
           {{- if .Values.mariadb.volumeMounts }}
           volumeMounts:
           {{- range $volume := .Values.mariadb.volumeMounts }}
-              -   name: {{ $releaseName }}-{{ $volume.name }}
-                  mountPath: {{ $volume.mountPath }}
+            - name: {{ $releaseName }}-{{ $volume.name }}
+              mountPath: {{ $volume.mountPath }}
           {{- end }}
           {{- end }}
       {{- with .Values.mariadb.nodeSelector }}
@@ -99,9 +71,9 @@ spec:
       {{- if .Values.mariadb.volumes }}
       volumes:
       {{- range $volume := .Values.mariadb.volumes }}
-          -   name: {{ $releaseName }}-{{ $volume.name }}
-              persistentVolumeClaim:
-                  claimName: {{ $releaseName }}-{{ $volume.claimName }}
+        - name: {{ $releaseName }}-{{ $volume.name }}
+          persistentVolumeClaim:
+            claimName: {{ $releaseName }}-{{ $volume.claimName }}
       {{- end }}
       {{- end }}
 
@@ -112,6 +84,7 @@ kind: Service
 metadata:
   name: {{ $releaseName }}-maria-db
 spec:
+  clusterIP: None
   ports:
     - port: 3306
   selector:

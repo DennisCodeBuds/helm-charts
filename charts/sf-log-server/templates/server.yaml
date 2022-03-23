@@ -99,7 +99,7 @@ spec:
             - name: MARIADB_HOST
               value: {{ $releaseName }}-maria-db
             - name: DATABASE_URL
-              value: mysql://$(MARIADB_USERNAME):$(MARIADB_PASSWORD)@$(MARIADB_HOST)/{{.Values.mariadb.database}}?serverVersion={{.Values.mariadb.image.tag}}"
+              value: mysql://$(MARIADB_USERNAME):$(MARIADB_PASSWORD)@$(MARIADB_HOST)/{{.Values.mariadb.database}}?serverVersion={{.Values.mariadb.image.tag}}
 
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
