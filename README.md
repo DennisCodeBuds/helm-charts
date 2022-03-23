@@ -22,7 +22,10 @@ To uninstall the chart:
 ## Charts
 
 ### sf-log-server
-
+- 0.2.0 :
+    - update micro-symfony-kernel to 0.1.2
+    - Set mariaDB to StatefulSet
+    - Add helper for MariaDB env vars
 - 0.1.0 : A symfony 6 server and a MariaDB server.
     - Keep track of all visits
     - Add a PVC 
