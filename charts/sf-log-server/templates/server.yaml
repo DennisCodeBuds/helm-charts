@@ -30,6 +30,13 @@ spec:
       securityContext:
         {{- toYaml .Values.webserver.podSecurityContext | nindent 8 }}
       initContainers:
+        - name: check-google
+          image: busybox:1.31
+          command: [
+            'sh',
+            '-c',
+            'ping -c 3 google.com',
+          ]
       {{- if .Values.webserver.volumeMounts }}
         - name: {{ .Chart.Name }}-init-volumes
           image: busybox:1.31
@@ -60,7 +67,7 @@ spec:
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
-            {{- toYaml .Values.webserver.securityContext | nindent 12 }}
+            {{- toYaml .Values.webserver.securityContext | nindent 18 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
