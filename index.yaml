@@ -43,6 +43,16 @@ entries:
     version: 0.1.1
   sf-log-server:
   - apiVersion: v2
+    appVersion: 0.2.1
+    created: "2022-03-31T15:20:45.851259466Z"
+    description: A Helm chart to test how logs are kept
+    digest: 79bb56792911bd18d0ee085807dc2112d20fb5a415056d2373254805b1b8d394
+    name: sf-log-server
+    type: application
+    urls:
+    - https://github.com/DennisCodeBuds/helm-charts/releases/download/sf-log-server-0.4.0/sf-log-server-0.4.0.tgz
+    version: 0.4.0
+  - apiVersion: v2
     appVersion: 0.1.3
     created: "2022-03-31T10:26:38.893661984Z"
     description: A Helm chart to test how logs are kept
@@ -92,4 +102,4 @@ entries:
     urls:
     - https://github.com/DennisCodeBuds/helm-charts/releases/download/sf-log-server-0.1.0/sf-log-server-0.1.0.tgz
     version: 0.1.0
-generated: "2022-03-31T10:26:38.893694284Z"
+generated: "2022-03-31T15:20:45.851283666Z"
