@@ -22,6 +22,9 @@ To uninstall the chart:
 ## Charts
 
 ### sf-log-server
+- 0.4.1 : Add default values for *serviceAccount* and *autoscaling*
+- 0.4.0 : Update docker image version
+- 0.3.0 : Add Ingress
 - 0.2.0 :
     - update micro-symfony-kernel to 0.1.2
     - Set mariaDB to StatefulSet
@@ -32,7 +35,7 @@ To uninstall the chart:
     - Use InitContainers to check Database state and set PVC rights on mountPaths
 
 ### deno-webserver
-
+- 0.3.1 : Update deno docker image to 1.5.1
 - 0.3.1 : Remove unused values
 - 0.3.0 : Add mariaDB deployement
 - 0.2.0 : Add volumes
